@@ -547,7 +547,7 @@ class SmithWaterman:
             si = tupla[0]
             sj = tupla[1]
 
-            char = '⋅'
+            char = '•'
             if si.upper() == sj.upper():
                 char = '|'
             elif si == '-' or sj == '-':
