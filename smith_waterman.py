@@ -6,12 +6,6 @@ import time
 import argparse
 import textwrap
 import traceback
-import base64
-import dash
-import dash_bio
-import dash_html_components as html
-import dash_core_components as dcc
-# from dash.dependencies import Input, Output
 from collections import OrderedDict
 
 def menu(args):
@@ -20,7 +14,7 @@ def menu(args):
                                      epilog = textwrap.dedent("""\
          Examples of alignment:
            For amino acid sequences
-             python %(prog)s -t aa -f sequences.fa -gap -1
+             python %(prog)s -t aa -f sequences.fa -sm PAM250 -gap -1
 
            For nucleotide sequences
              python %(prog)s -t nt -f sequences.fa -m 2 -mi -1 -gap -2
@@ -597,104 +591,6 @@ class SmithWaterman:
                 fw.write('%s\n' % ' '.join(row))
         fw.close()
 
-class DashAlignmentChart:
-
-    def __init__(self):
-        self.DATASET = None
-
-    def set_dataset(self, alignment1, alignment2, dict_sequences):
-        head1, head2 = list(dict_sequences.keys())
-        return '%s\n%s\n%s\n%s' % (head1, alignment1.upper(), head2, alignment2.upper())
-
-    def header_colors(self):
-        return {
-            'bg_color': '#0C4142',
-            'font_color': 'white',
-        }
-
-    def callbacks(self, _app):
-        @_app.callback(
-            Output('alignment-viewer-output', 'children'),
-            [Input('alignment-chart', 'eventDatum')]
-        )
-        def update_output(value):
-            if value is None:
-                return 'No data...'
-            return str(value)
-
-    def layout(self):
-        return html.Div(id = 'alignment-body', className = 'app-body', children = [
-            dcc.Loading(className = 'dashbio-loading', children = html.Div([
-                dash_bio.AlignmentChart(
-                    id = 'alignment-chart',
-                    data = self.DATASET,
-                    showgap = True,
-                    showconservation = True,
-                    showconsensus = True,
-                    colorscale = 'clustal2',
-                    height = 455, # 725
-                    tilewidth = 20,
-                ),
-            ])),
-            # html.Div(id = 'alignment-viewer-output')
-        ])
-
-    def run_standalone_app(self, title):
-        app = dash.Dash(__name__)
-        app.css.config.serve_locally = True
-        app.scripts.config.serve_locally = True
-        # Handle callback to component with id "fullband-switch"
-        app.config['suppress_callback_exceptions'] = True
-
-        # Assign layout
-        app.layout = self.app_page_layout(page_layout = self.layout(), app_title = title, **self.header_colors())
-
-        # Register all callbacks
-        # self.callbacks(app)
-
-        # return app object
-        return app
-
-    def app_page_layout(self, page_layout, app_title = "Dash Bio App", bg_color = "#506784", font_color = "#F3F6FA"):
-        return html.Div(
-            id = 'main_page',
-            children = [
-                dcc.Location(id = 'url', refresh = False),
-                html.Div(
-                    id = 'app-page-header',
-                    children = [
-                        html.A(
-                            id = 'dashbio-logo', children = [
-                                html.Img(
-                                    src = 'data:image/png;base64,{}'.format(
-                                        base64.b64encode(
-                                            open(
-                                                './assets/plotly-dash-bio-logo.png', 'rb'
-                                            ).read()
-                                        ).decode()
-                                    )
-                                )],
-                        ),
-                        html.H2(
-                            app_title,
-                            style = {
-                            'fontFamily': 'Arial',
-                            'fontSize': 25,
-                    }
-                        )
-                    ],
-                    style = {
-                        'background': bg_color,
-                        'color': font_color,
-                    }
-                ),
-                html.Div(
-                    id = 'app-page-content',
-                    children = page_layout
-                )
-            ],
-        )
-
 def main(args):
     try:
         start = oalig.start_time()
@@ -741,13 +637,6 @@ def main(args):
         oalig.show_print("Matrix file: %s" % oalig.MATRIX_FILE, [oalig.LOG_FILE])
         oalig.show_print("", [oalig.LOG_FILE])
 
-        oalig.show_print("Running Dash's alignment viewer", [oalig.LOG_FILE])
-        oalig.show_print("Run the address http://127.0.0.1:8050 in your browser", [oalig.LOG_FILE])
-        odash.DATASET = odash.set_dataset(alignment1, alignment2, dict_sequences)
-        app = odash.run_standalone_app('Smith–Waterman Algorithm')
-        app.run_server(debug = True, port = 8050, use_reloader = False)
-        oalig.show_print("", [oalig.LOG_FILE])
-
         oalig.show_print(oalig.finish_time(start, "Elapsed time"), [oalig.LOG_FILE])
         oalig.show_print("Done.", [oalig.LOG_FILE])
     except Exception as e:
@@ -757,5 +646,4 @@ def main(args):
 
 if __name__ == '__main__':
     oalig = SmithWaterman()
-    odash = DashAlignmentChart()
     main(sys.argv)
