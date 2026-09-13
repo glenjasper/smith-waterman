@@ -7,15 +7,6 @@ The program accepts **DNA/nucleotide** or **amino acid** sequences in a FASTA fi
 ## Requirements
 
 - Python 3
-- Dash
-- Dash Bio
-
-Install the required Python packages with:
-
-```bash
-pip install dash
-pip install dash-bio
-```
 
 ## Usage
 
